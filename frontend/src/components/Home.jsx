@@ -64,7 +64,7 @@ export default function Home() {
           <p style={{ margin: 0 }}>{error}</p>
           <div style={{ marginTop: 8 }}>
             <Link to="/login" style={styles.link}>Login</Link>
-            {' · '}
+            {' ï¿½ '}
             <Link to="/signup" style={styles.link}>Sign Up</Link>
           </div>
         </div>
@@ -87,8 +87,8 @@ export default function Home() {
             <h3 style={{ marginTop: 0 }}>Account summary (sample)</h3>
             <p style={{ margin: '6px 0' }}>This is static sample content for testing UI.</p>
             <ul>
-              <li>Checking — ACC0001 — $1,000.00</li>
-              <li>Savings — ACC0002 — $500.00</li>
+              <li>Checking ï¿½ ACC0001 ï¿½ $1,000.00</li>
+              <li>Savings ï¿½ ACC0002 ï¿½ $500.00</li>
             </ul>
           </div>
 

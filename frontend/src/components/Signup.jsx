@@ -6,7 +6,7 @@ export default function Register() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    name: "",
+   username: "",
     email: "",
     password: "",
     confirmPassword: ""
@@ -32,9 +32,9 @@ export default function Register() {
       setError("");
       // Adjust endpoint as needed for your backend.
       const res = await api.signup(
-        { name: formData.name, email: formData.email, password: formData.password },
-        "/auth/register"
-      );
+       { username: formData.username, email: formData.email, password: formData.password }, 
+         "/auth/register" 
+       );
 
       if (!res.ok) {
         const message = res.data && res.data.message ? res.data.message : "Registration failed";
@@ -55,9 +55,9 @@ export default function Register() {
       <form onSubmit={handleSubmit} style={styles.form}>
         <input
           type="text"
-          name="name"
+          name="username"
           placeholder="Full Name"
-          value={formData.name}
+          value={formData.username}
           onChange={handleChange}
           style={styles.input}
           required

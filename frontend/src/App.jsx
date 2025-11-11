@@ -31,17 +31,21 @@ export default function App() {
   return (
     <Router>
       <div className="App">
-        <header className="App-header" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <img src={logo} className="App-logo" alt="logo" />
-          <nav style={{ display: 'flex', gap: 12 }}>
-            <Link to="/">Home</Link>
-            {!user && <Link to="/login">Login</Link>}
-            {!user && <Link to="/signup">Sign Up</Link>}
-            {user && <button onClick={handleLogout}>Logout</button>}
-          </nav>
+      <header className="App-header">
+        <div className='logoDiv'>
+           <img src={logo} className="App-logo" alt="logo" />
+        </div>
+        
+      <nav className="navItems">
+        <Link to="/">Home</Link>
+        {!user && <Link to="/login">Login</Link>}
+        {!user && <Link to="/signup">Sign Up</Link>}
+        {user && <button onClick={handleLogout}>Logout</button>}
+      </nav>
+          
         </header>
 
-        <main style={{ padding: 5 }}>
+        <main style={{ padding: 3 }}>
           <Routes>
             <Route path="/" element={<Home user={user} />} />
             <Route path="/login" element={<Login onLogin={handleLogin} />} />
