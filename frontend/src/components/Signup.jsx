@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import './loginsignup.css';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -115,4 +114,3 @@ const styles = {
     fontWeight: "bold"
   }
 };
-
