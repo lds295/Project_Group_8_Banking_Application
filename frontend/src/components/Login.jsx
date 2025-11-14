@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import './loginsignup.css';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -109,4 +108,3 @@ const styles = {
     fontWeight: "bold"
   }
 };
-
