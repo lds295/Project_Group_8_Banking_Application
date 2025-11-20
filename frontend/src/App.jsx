@@ -33,11 +33,11 @@ export default function App() {
       <div className="App">
       <header className="App-header">
         <div className='logoDiv'>
-           <img src={logo} className="App-logo" alt="logo" />
+           <a href="/Home"><img src={logo} className="App-logo" alt="logo" /></a>
         </div>
         
       <nav className="navItems">
-        <Link to="/">Home</Link>
+        
         {!user && <Link to="/login">Login</Link>}
         {!user && <Link to="/signup">Sign Up</Link>}
         {user && <button onClick={handleLogout}>Logout</button>}
@@ -45,7 +45,7 @@ export default function App() {
           
         </header>
 
-        <main style={{ padding: 3 }}>
+        <main style={{ padding: 6 }}>
           <Routes>
             <Route path="/" element={<Home user={user} />} />
             <Route path="/login" element={<Login onLogin={handleLogin} />} />
