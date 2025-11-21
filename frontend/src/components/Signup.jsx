@@ -7,6 +7,7 @@ export default function Register() {
 
   const [formData, setFormData] = useState({
    username: "",
+   phone_number: '',
     email: "",
     password: "",
     confirmPassword: ""
@@ -32,7 +33,7 @@ export default function Register() {
       setError("");
       // Adjust endpoint as needed for your backend.
       const res = await api.signup(
-       { username: formData.username, email: formData.email, password: formData.password }, 
+       { username: formData.username, email: formData.email, password: formData.password, phone_number: formData.phone_number }, 
          "/auth/register" 
        );
 
@@ -62,6 +63,16 @@ export default function Register() {
           style={styles.input}
           required
         />
+        <input
+          type="tel"
+          name="phone_number"
+          placeholder="Phone Number (Optional)"
+          value={formData.phone_number}
+          onChange={handleChange}
+          style={styles.input}
+          />
+
+
 
         <input
           type="email"

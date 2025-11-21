@@ -17,7 +17,7 @@ function signToken(user) {
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, phone_number } = req.body;
   if (!username || !email || !password)
     return res.status(400).json({ message: 'username, email and password are required' });
 
@@ -27,10 +27,10 @@ router.post('/register', async (req, res) => {
 
     const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
     const insert = await db.query(
-      `INSERT INTO users (username, email, password_hash)
-       VALUES ($1, $2, $3)
-       RETURNING user_id, username, email, created_at`,
-      [username, email, password_hash]
+      `INSERT INTO users (username, email, password_hash, phone_number)
+       VALUES ($1, $2, $3, $4)
+       RETURNING user_id, username, email, phone_number, created_at`,
+      [username, email, password_hash, phone_number]
     );
 
     const user = insert.rows[0];
@@ -48,7 +48,7 @@ router.post('/login', async (req, res) => {
   if (!email || !password) return res.status(400).json({ message: 'email and password required' });
 
   try {
-    const q = await db.query('SELECT user_id, username, email, password_hash FROM users WHERE email = $1 LIMIT 1', [email]);
+    const q = await db.query('SELECT user_id, username, email, password_hash, phone_number FROM users WHERE email = $1 LIMIT 1', [email]);
     const user = q.rows[0];
     if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 
@@ -56,7 +56,7 @@ router.post('/login', async (req, res) => {
     if (!match) return res.status(401).json({ message: 'Invalid credentials' });
 
     const token = signToken(user);
-    res.json({ token, user: { user_id: user.user_id, username: user.username, email: user.email } });
+    res.json({ token, user: { user_id: user.user_id, username: user.username, email: user.email, phone_number: user.phone_number } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Internal server error' });

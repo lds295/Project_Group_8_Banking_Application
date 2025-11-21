@@ -6,7 +6,7 @@ const auth = require('../middleware/auth');
 // GET /api/users/me
 router.get('/me', auth, async (req, res) => {
   try {
-    const q = await db.query('SELECT user_id, username, email, created_at FROM users WHERE user_id = $1 LIMIT 1', [req.user.user_id]);
+    const q = await db.query('SELECT user_id, username, email, created_at, phone_number FROM users WHERE user_id = $1 LIMIT 1', [req.user.user_id]);
     if (!q.rows.length) return res.status(404).json({ message: 'User not found' });
     res.json({ user: q.rows[0] });
   } catch (err) {

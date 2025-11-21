@@ -4,6 +4,7 @@ import api from '../api';
 
 export default function Home() {
   const [user, setUser] = useState(null);
+  const [transactions, setTransactions] = useState([]); // NEW STATE
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -11,40 +12,47 @@ export default function Home() {
   useEffect(() => {
     let mounted = true;
 
-    const fetchUser = async () => {
+    const fetchData = async () => {
       setLoading(true);
       setError('');
       try {
-        // Calls backend protected route: GET /api/users/me
-        const res = await api.get('/users/me');
+        // FETCH BOTH USER AND TRANSACTIONS
+        const [userRes, txRes] = await Promise.all([
+            api.get('/users/me'),
+            api.get('/transactions')
+        ]);
+
         if (!mounted) return;
 
-        if (!res.ok) {
-          if (res.status === 401) {
+        // Handle User Logic
+        if (!userRes.ok) {
+          if (userRes.status === 401) {
             setError('Not authenticated. Please log in.');
             setUser(null);
           } else {
-            setError(res.data?.message || 'Failed to load user data.');
+            setError(userRes.data?.message || 'Failed to load user data.');
           }
         } else {
-          // backend returns { user: { ... } }
-          const found = res.data?.user ?? res.data;
-          setUser(found);
+          setUser(userRes.data?.user ?? userRes.data);
         }
+
+        // Handle Transaction Logic
+        if (txRes.ok && txRes.data && txRes.data.transactions) {
+            setTransactions(txRes.data.transactions);
+        } else {
+            setTransactions([]);
+        }
+
       } catch (err) {
         console.error(err);
-        if (!mounted) return;
-        setError('Could not fetch user data.');
-        setUser(null);
+        if (mounted) setError('Could not fetch data.');
       } finally {
         if (mounted) setLoading(false);
       }
     };
 
-    fetchUser();
-    return () => {
-      mounted = false;
-    };
+    fetchData();
+    return () => { mounted = false; };
   }, []);
 
   const handleLogout = () => {
@@ -58,43 +66,52 @@ export default function Home() {
       <h1 style={styles.title}>Dashboard</h1>
 
       {loading && <p style={styles.info}>Loading...</p>}
-
-      {!loading && error && (
-        <div style={styles.alert}>
-          <p style={{ margin: 0 }}>{error}</p>
-          <div style={{ marginTop: 8 }}>
-            <Link to="/login" style={styles.link}>Login</Link>
-            {' � '}
-            <Link to="/signup" style={styles.link}>Sign Up</Link>
-          </div>
-        </div>
-      )}
-
-      {!loading && !error && !user && (
-        <div>
-          <p style={styles.info}>No user data. Try logging in:</p>
-          <Link to="/login" style={styles.button}>Go to Login</Link>
-        </div>
-      )}
+      {!loading && error && <div style={styles.alert}>{error}</div>}
 
       {!loading && user && (
         <div>
-          <p style={styles.welcome}>
-            Welcome, <strong>{user.username ?? user.name ?? user.email}</strong>
-          </p>
-
+          <p style={styles.welcome}>Welcome, <strong>{user.username}</strong></p>
+          
+          {/* EXISTING ACCOUNTS CARD */}
           <div style={styles.card}>
-            <h3 style={{ marginTop: 0 }}>Account summary (sample)</h3>
-            <p style={{ margin: '6px 0' }}>This is static sample content for testing UI.</p>
+            <h3>Account Summary</h3>
             <ul>
-              <li>Checking � ACC0001 � $1,000.00</li>
-              <li>Savings � ACC0002 � $500.00</li>
+               <li>Checking - ACC001 - $1,000.00</li>
+               <li>Savings - ACC002 - $500.00</li>
             </ul>
           </div>
 
-          <div style={{ marginTop: 12 }}>
-            <button onClick={handleLogout} style={styles.button}>Logout</button>
+          {/* --- NEW TRANSACTIONS LIST --- */}
+          <div style={{ marginTop: 20 }}>
+            <h3>Recent Transfers</h3>
+            {transactions.length === 0 ? (
+              <p style={styles.info}>No recent activity.</p>
+            ) : (
+              <ul style={styles.list}>
+                {transactions.map((t) => (
+                  <li key={t.transaction_id} style={styles.listItem}>
+                    <div>
+                      <strong style={{ display: 'block' }}>
+                        {t.direction === 'IN' 
+                          ? `Received from ${t.sender_name}` 
+                          : `Sent to ${t.receiver_name}`
+                        }
+                      </strong>
+                      <span style={{ fontSize: '0.85em', color: '#666' }}>{t.note}</span>
+                    </div>
+                    <div style={{ 
+                        fontWeight: 'bold', 
+                        color: t.direction === 'IN' ? 'green' : 'red' 
+                    }}>
+                      {t.direction === 'IN' ? '+' : '-'}${t.amount}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
+
+          <button onClick={handleLogout} style={styles.button}>Logout</button>
         </div>
       )}
     </div>
@@ -102,47 +119,13 @@ export default function Home() {
 }
 
 const styles = {
-  container: {
-    maxWidth: 760,
-    margin: '40px auto',
-    padding: 20,
-    borderRadius: 8,
-    border: '1px solid #e5e7eb',
-    background: '#ffffff',
-    fontFamily: 'Arial, sans-serif',
-    color: '#111827'
-  },
-  title: { fontSize: 24, marginBottom: 12 },
-  welcome: { fontSize: 16, color: '#111827' },
-  info: { color: '#6b7280' },
-  alert: {
-    padding: 12,
-    background: '#fff7ed',
-    border: '1px solid #ffedd5',
-    borderRadius: 6,
-    color: '#92400e'
-  },
-  card: {
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 6,
-    background: '#f3f4f6',
-    border: '1px solid #e5e7eb'
-  },
-  link: {
-    color: '#2563eb',
-    textDecoration: 'none',
-    fontWeight: 600
-  },
-  button: {
-    display: 'inline-block',
-    padding: '8px 12px',
-    background: '#2563eb',
-    color: '#fff',
-    textDecoration: 'none',
-    border: 'none',
-    borderRadius: 6,
-    cursor: 'pointer',
-    fontWeight: 600
-  }
+  container: { maxWidth: 760, margin: '40px auto', padding: 20, fontFamily: 'Arial' },
+  card: { background: '#f3f4f6', padding: 15, borderRadius: 8, marginBottom: 20 },
+  title: { fontSize: 24, marginBottom: 10 },
+  welcome: { fontSize: 18, marginBottom: 10 },
+  button: { padding: '10px 15px', background: 'blue', color: 'white', border: 'none', borderRadius: 5, cursor: 'pointer', marginTop: 20 },
+  
+  // NEW STYLES FOR LIST
+  list: { listStyle: 'none', padding: 0, border: '1px solid #eee', borderRadius: 5 },
+  listItem: { display: 'flex', justifyContent: 'space-between', padding: '10px', borderBottom: '1px solid #eee' }
 };

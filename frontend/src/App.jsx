@@ -13,6 +13,8 @@ import {
 import Home from './components/Home';
 import Login from './components/Login';
 import Signup from './components/Signup';
+import Send_money from './components/Send_Money';
+
 
 function PrivateRoute({ user, children }) {
   return user ? children : <Navigate to="/login" replace />;
@@ -32,15 +34,16 @@ export default function App() {
     <Router>
       <div className="App">
       <header className="App-header">
+      <a href="/Home"><img src={logo} className="App-logo" alt="logo" />
         <div className='logoDiv'>
-           <a href="/Home"><img src={logo} className="App-logo" alt="logo" /></a>
+           
         </div>
-        
+        </a>
       <nav className="navItems">
         
-        {!user && <Link to="/login">Login</Link>}
-        {!user && <Link to="/signup">Sign Up</Link>}
-        {user && <button onClick={handleLogout}>Logout</button>}
+        <Link to="/login">Login</Link>
+        
+        
       </nav>
           
         </header>
