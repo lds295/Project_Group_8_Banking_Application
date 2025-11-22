@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 import api from "../api";
 
 export default function Login({ onLogin }) {
@@ -77,6 +78,11 @@ export default function Login({ onLogin }) {
           Login
         </button>
       </form>
+      <p style={{ marginTop: "15px" }}>Don't Have an Account? {""}
+      <Link to="/Signup" style={styles.link}>
+        Sign up Here
+      </Link> 
+      </p>
     </div>
   );
 }
@@ -109,5 +115,11 @@ const styles = {
     background: "#007bff",
     color: "#fff",
     fontWeight: "bold"
+  },
+  link: {
+    color: "#007bff",      // Standard link blue
+    textDecoration: "none", // Removes the underline (optional)
+    fontWeight: "bold",
+    cursor: "pointer"
   }
 };

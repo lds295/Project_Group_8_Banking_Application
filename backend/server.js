@@ -6,6 +6,7 @@ require('dotenv').config(); // Loads .env file contents into process.env
 // --- Route Imports ---
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
+const transactionRoutes = require('./routes/transactions');
 
 // --- App Initialization ---
 const app = express();
@@ -23,7 +24,7 @@ app.use(express.json());
 // --- API Routes ---
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-
+app.use('/api/transactions', transactionRoutes);
 // A simple test route
 app.get('/api', (req, res) => {
   res.json({ message: 'Hello from the backend!' });
