@@ -42,6 +42,7 @@ export default function App() {
       <nav className="navItems">
         
         <Link to="/login">Login</Link>
+        <Link to="/send_money">Send Money</Link>
         
         
       </nav>
@@ -53,6 +54,7 @@ export default function App() {
             <Route path="/" element={<Home user={user} />} />
             <Route path="/login" element={<Login onLogin={handleLogin} />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/send_money" element={<Send_money />} />
             {/* Example of a protected route */}
             <Route
               path="/protected"
