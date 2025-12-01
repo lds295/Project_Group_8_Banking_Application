@@ -1,135 +1,162 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
+import api from '../api';
 
-export default function SendMoneyPage() {
-  const [query, setQuery] = useState("");
-  const [searchResult, setSearchResult] = useState(null);
-  const [amount, setAmount] = useState("");
-  const [message, setMessage] = useState("");
+export default function SendMoney() {
+  const [user, setUser] = useState(null);
+  const [recipientQuery, setRecipientQuery] = useState('');
+  const [recipient, setRecipient] = useState(null);
+  const [amount, setAmount] = useState('');
+  const [note, setNote] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const handleSearch = async () => {
-    setMessage("");
-    setSearchResult(null);
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        // Fetch user info
+        const res = await api.get('/users/me');
+        if (!res.ok) return;
+        const userData = res.data.user ?? res.data;
 
+        // Fetch accounts
+        const accRes = await api.get('/users/me/accounts');
+        let checkingBalance = 0;
+        if (accRes.ok && accRes.data.accounts) {
+          const checkingAcc = accRes.data.accounts.find(acc =>
+            acc.account_name.toLowerCase().includes('checking')
+          );
+          checkingBalance = checkingAcc ? parseFloat(checkingAcc.balance) : 0;
+        }
+
+        setUser({
+          ...userData,
+          checking_balance: checkingBalance
+        });
+
+      } catch (err) {
+        console.error(err);
+        setError('Failed to load user data.');
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const lookupRecipient = async () => {
+    setError('');
+    setRecipient(null);
     try {
-      const res = await fetch(`/api/users/search?query=${encodeURIComponent(query)}`);
-      const data = await res.json();
-
-      if (data.user) {
-        setSearchResult(data.user);
+      const res = await api.get(`/users/search?query=${recipientQuery}`);
+      if (res.ok && res.data.user) {
+        setRecipient(res.data.user);
       } else {
-        setMessage("No user found.");
+        setError('User not found.');
       }
     } catch (err) {
       console.error(err);
-      setMessage("Error searching user.");
+      setError('Failed to look up user.');
     }
   };
 
-  const handleSendMoney = async () => {
-    setMessage("");
+  const handleSend = async () => {
+    setError('');
+    setSuccess('');
+
+    if (!recipient) {
+      setError('Please select a recipient.');
+      return;
+    }
+    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+      setError('Enter a valid amount.');
+      return;
+    }
+    if (parseFloat(amount) > (user.checking_balance || 0)) {
+      setError('Insufficient balance.');
+      return;
+    }
 
     try {
-      const res = await fetch("/api/transfer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipientId: searchResult.id,
-          amount: Number(amount)
-        })
+      const res = await api.post('/transactions/send', {
+        to_user_id: recipient.user_id,
+        amount: parseFloat(amount),
+        note,
       });
 
-      const data = await res.json();
+      if (res.ok) {
+        setSuccess(`Sent $${parseFloat(amount).toFixed(2)} to ${recipient.username}`);
+        setAmount('');
+        setNote('');
+        setRecipient(null);
 
-      if (res.ok) setMessage("Money sent successfully!");
-      else setMessage(data.error || "Transfer failed.");
+        // Update local user balance
+        setUser(prev => ({
+          ...prev,
+          checking_balance: (prev.checking_balance || 0) - parseFloat(amount)
+        }));
+      } else {
+        setError(res.data?.message || 'Failed to send money.');
+      }
     } catch (err) {
       console.error(err);
-      setMessage("Error sending money.");
+      setError('Error sending money.');
     }
   };
 
   return (
     <div style={styles.container}>
-      <h2>Send Money</h2>
+      <h1 style={styles.title}>Send Money</h1>
 
-      <div style={styles.card}>
-        <h3>Search User</h3>
-        <input
-          style={styles.input}
-          type="text"
-          placeholder="Enter phone number or email..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <button style={styles.button} onClick={handleSearch}>Search</button>
-      </div>
-
-      {searchResult && (
+      {user && (
         <div style={styles.card}>
-          <h3>User Found</h3>
-          <p><strong>Name:</strong> {searchResult.name}</p>
-          <p><strong>Email:</strong> {searchResult.email}</p>
-          <p><strong>Phone:</strong> {searchResult.phone}</p>
-
-          <input
-            style={styles.input}
-            type="number"
-            placeholder="Amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-
-          <button style={styles.sendButton} onClick={handleSendMoney}>
-            Send Money
-          </button>
+          <p><strong>Your Checking Balance:</strong> ${user.checking_balance?.toFixed(2) ?? '0.00'}</p>
         </div>
       )}
 
-      {message && <p style={styles.message}>{message}</p>}
+      <div style={styles.card}>
+        <h3>Recipient Lookup</h3>
+        <input
+          type="text"
+          placeholder="Enter email or phone"
+          value={recipientQuery}
+          onChange={(e) => setRecipientQuery(e.target.value)}
+          style={styles.input}
+        />
+        <button onClick={lookupRecipient} style={styles.button}>Lookup</button>
+
+        {recipient && (
+          <p style={{ marginTop: 10 }}>Recipient: <strong>{recipient.username}</strong></p>
+        )}
+      </div>
+
+      <div style={styles.card}>
+        <h3>Send Details</h3>
+        <input
+          type="number"
+          placeholder="Amount"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          style={styles.input}
+        />
+        <input
+          type="text"
+          placeholder="Note (optional)"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          style={styles.input}
+        />
+        <button onClick={handleSend} style={styles.button}>Send</button>
+
+        {error && <p style={{ color: 'red', marginTop: 10 }}>{error}</p>}
+        {success && <p style={{ color: 'green', marginTop: 10 }}>{success}</p>}
+      </div>
     </div>
   );
 }
 
 const styles = {
-  container: {
-    maxWidth: "500px",
-    margin: "auto",
-    padding: "20px",
-    fontFamily: "Arial"
-  },
-  card: {
-    background: "#f4f4f4",
-    padding: "15px",
-    marginTop: "20px",
-    borderRadius: "10px"
-  },
-  input: {
-    width: "100%",
-    padding: "10px",
-    marginTop: "10px",
-    borderRadius: "6px",
-    border: "1px solid #ccc"
-  },
-  button: {
-    marginTop: "10px",
-    padding: "10px 15px",
-    background: "#0077ff",
-    color: "#fff",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer"
-  },
-  sendButton: {
-    marginTop: "10px",
-    padding: "10px 15px",
-    background: "green",
-    color: "#fff",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer"
-  },
-  message: {
-    marginTop: "20px",
-    fontWeight: "bold"
-  }
+  container: { maxWidth: 600, margin: '40px auto', fontFamily: 'Arial' },
+  card: { background: '#f3f4f6', padding: 15, borderRadius: 8, marginBottom: 20 },
+  title: { fontSize: 24, marginBottom: 20 },
+  input: { width: '100%', padding: 10, marginBottom: 10, borderRadius: 5, border: '1px solid #ccc' },
+  button: { padding: '10px 15px', background: 'blue', color: 'white', border: 'none', borderRadius: 5, cursor: 'pointer' },
 };

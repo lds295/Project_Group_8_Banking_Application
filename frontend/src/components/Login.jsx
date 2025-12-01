@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
 import api from "../api";
+import "./loginsignup.css"; // <--- ADD THIS IMPORT
 
 export default function Login({ onLogin }) {
   const navigate = useNavigate();
@@ -48,17 +48,17 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div style={styles.container}>
-      <h2>Login</h2>
+    <div className="auth-container">
+      <h2 className="title">Login</h2>
 
-      <form onSubmit={handleSubmit} style={styles.form}>
+      <form onSubmit={handleSubmit} className="form-column">
         <input
           type="email"
           name="email"
           placeholder="Email"
           value={formData.email}
           onChange={handleChange}
-          style={styles.input}
+          className="form-input"
           required
         />
 
@@ -68,58 +68,23 @@ export default function Login({ onLogin }) {
           placeholder="Password"
           value={formData.password}
           onChange={handleChange}
-          style={styles.input}
+          className="form-input"
           required
         />
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
+        {error && <div className="error-msg">{error}</div>}
 
-        <button type="submit" style={styles.button}>
+        <button type="submit" className="btn btn-primary">
           Login
         </button>
       </form>
-      <p style={{ marginTop: "15px" }}>Don't Have an Account? {""}
-      <Link to="/Signup" style={styles.link}>
-        Sign up Here
-      </Link> 
+
+      <p style={{ marginTop: "20px", textAlign: "center" }}>
+        Don't Have an Account?{" "}
+        <Link to="/signup" className="link-text">
+          Sign up Here
+        </Link> 
       </p>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    maxWidth: "380px",
-    margin: "60px auto",
-    border: "1px solid #ddd",
-    padding: "25px",
-    borderRadius: "10px",
-    fontFamily: "Arial"
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column"
-  },
-  input: {
-    padding: "10px",
-    margin: "8px 0",
-    borderRadius: "6px",
-    border: "1px solid #ccc"
-  },
-  button: {
-    padding: "10px",
-    marginTop: "10px",
-    cursor: "pointer",
-    borderRadius: "6px",
-    border: "none",
-    background: "#007bff",
-    color: "#fff",
-    fontWeight: "bold"
-  },
-  link: {
-    color: "#007bff",      // Standard link blue
-    textDecoration: "none", // Removes the underline (optional)
-    fontWeight: "bold",
-    cursor: "pointer"
-  }
-};

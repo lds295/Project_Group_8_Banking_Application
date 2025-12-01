@@ -79,10 +79,32 @@ FROM users u
 WHERE u.username = 'alice'
 ON CONFLICT (account_number) DO NOTHING;
 
+-- Alice gets a Savings account with $500
+INSERT INTO accounts (user_id, account_number, account_name, balance, currency)
+SELECT u.user_id,
+       CONCAT('ACC', u.user_id, '002'),  
+       CONCAT(u.username, '''s Savings'),
+       500.00,
+       'USD'
+FROM users u
+WHERE u.username = 'alice'
+ON CONFLICT (account_number) DO NOTHING;
+
+-- Bob gets a Checking account with $250
+INSERT INTO accounts (user_id, account_number, account_name, balance, currency)
+SELECT u.user_id,
+       CONCAT('ACC', u.user_id, '003'),  
+       CONCAT(u.username, '''s Checking'),
+       250.00,
+       'USD'
+FROM users u
+WHERE u.username = 'bob'
+ON CONFLICT (account_number) DO NOTHING;
+
 -- Bob account
 INSERT INTO accounts (user_id, account_number, account_name, balance, currency)
 SELECT u.user_id,
-       CONCAT('ACC', u.user_id, '002'),
+       CONCAT('ACC', u.user_id, '004'),
        CONCAT(u.username, '''s Savings'),
        500.00,
        'USD'
