@@ -4,7 +4,8 @@ import api from '../api';
 
 export default function Home() {
   const [user, setUser] = useState(null);
-  const [transactions, setTransactions] = useState([]); // NEW STATE
+  const [accounts, setAccounts] = useState([]); 
+  const [transactions, setTransactions] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -16,15 +17,16 @@ export default function Home() {
       setLoading(true);
       setError('');
       try {
-        // FETCH BOTH USER AND TRANSACTIONS
-        const [userRes, txRes] = await Promise.all([
+
+        const [userRes, accountRes, txRes] = await Promise.all([
             api.get('/users/me'),
+            api.get('/accounts'), 
             api.get('/transactions')
         ]);
 
         if (!mounted) return;
 
-        // Handle User Logic
+        // 1. Handle User Data
         if (!userRes.ok) {
           if (userRes.status === 401) {
             setError('Not authenticated. Please log in.');
@@ -36,7 +38,14 @@ export default function Home() {
           setUser(userRes.data?.user ?? userRes.data);
         }
 
-        // Handle Transaction Logic
+       
+        if (accountRes.ok && accountRes.data && accountRes.data.accounts) {
+            setAccounts(accountRes.data.accounts);
+        } else {
+            setAccounts([]); 
+        }
+
+       
         if (txRes.ok && txRes.data && txRes.data.transactions) {
             setTransactions(txRes.data.transactions);
         } else {
@@ -62,34 +71,55 @@ export default function Home() {
   };
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>Dashboard</h1>
+    <div className="container dashboard-container">
+      <h1 className="title">Dashboard</h1>
 
-      {loading && <p style={styles.info}>Loading...</p>}
-      {!loading && error && <div style={styles.alert}>{error}</div>}
+      {loading && <p className="info-text">Loading...</p>}
+      {!loading && error && <div className="error-msg">{error}</div>}
 
       {!loading && user && (
         <div>
-          <p style={styles.welcome}>Welcome, <strong>{user.username}</strong></p>
+          <p className="welcome-text">Welcome, <strong>{user.username}</strong></p>
           
-          {/* EXISTING ACCOUNTS CARD */}
-          <div style={styles.card}>
-            <h3>Account Summary</h3>
-            <ul>
-               <li>Checking - ACC001 - $1,000.00</li>
-               <li>Savings - ACC002 - $500.00</li>
-            </ul>
+          {/* --- ACCOUNT SUMMARY --- */}
+          
+          <div className="card">
+            <div className="card-header">
+                <h3 style={{ margin: 0 }}>Account Summary</h3>
+                <Link to="/transfer">
+                    <button className="btn-transfer">Transfer Money</button>
+                </Link>
+            </div>
+
+            {accounts.length === 0 ? (
+                <p>No accounts found.</p>
+            ) : (
+                <ul className="list-group">
+                    {accounts.map(acc => (
+                        <li key={acc.account_id} className="list-item">
+                            <div>
+                                <strong>{acc.account_name}</strong>
+                                <span className="text-muted">({acc.account_number})</span>
+                            </div>
+                            <div className="amount-text text-blue">
+                                ${Number(acc.balance).toFixed(2)}
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            )}
           </div>
 
-          {/* --- NEW TRANSACTIONS LIST --- */}
+          {/* --- TRANSACTIONS LIST --- */}
+          
           <div style={{ marginTop: 20 }}>
-            <h3>Recent Transfers</h3>
+            <h3>Recent Activity</h3>
             {transactions.length === 0 ? (
-              <p style={styles.info}>No recent activity.</p>
+              <p className="info-text">No recent activity.</p>
             ) : (
-              <ul style={styles.list}>
+              <ul className="list-group">
                 {transactions.map((t) => (
-                  <li key={t.transaction_id} style={styles.listItem}>
+                  <li key={t.transaction_id} className="list-item">
                     <div>
                       <strong style={{ display: 'block' }}>
                         {t.direction === 'IN' 
@@ -97,12 +127,10 @@ export default function Home() {
                           : `Sent to ${t.receiver_name}`
                         }
                       </strong>
-                      <span style={{ fontSize: '0.85em', color: '#666' }}>{t.note}</span>
+                      <span className="text-muted">{t.note || 'Transfer'}</span>
                     </div>
-                    <div style={{ 
-                        fontWeight: 'bold', 
-                        color: t.direction === 'IN' ? 'green' : 'red' 
-                    }}>
+                    {/* Dynamic Colors: Green for IN, Red for OUT */}
+                    <div className={`amount-text ${t.direction === 'IN' ? 'text-green' : 'text-red'}`}>
                       {t.direction === 'IN' ? '+' : '-'}${t.amount}
                     </div>
                   </li>
@@ -111,21 +139,9 @@ export default function Home() {
             )}
           </div>
 
-          <button onClick={handleLogout} style={styles.button}>Logout</button>
+          <button onClick={handleLogout} className="btn btn-logout">Logout</button>
         </div>
       )}
     </div>
   );
 }
-
-const styles = {
-  container: { maxWidth: 760, margin: '40px auto', padding: 20, fontFamily: 'Arial' },
-  card: { background: '#f3f4f6', padding: 15, borderRadius: 8, marginBottom: 20 },
-  title: { fontSize: 24, marginBottom: 10 },
-  welcome: { fontSize: 18, marginBottom: 10 },
-  button: { padding: '10px 15px', background: 'blue', color: 'white', border: 'none', borderRadius: 5, cursor: 'pointer', marginTop: 20 },
-  
-  // NEW STYLES FOR LIST
-  list: { listStyle: 'none', padding: 0, border: '1px solid #eee', borderRadius: 5 },
-  listItem: { display: 'flex', justifyContent: 'space-between', padding: '10px', borderBottom: '1px solid #eee' }
-};

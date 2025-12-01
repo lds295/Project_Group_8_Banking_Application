@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api";
+import "./loginsignup.css"; // <--- ADD THIS IMPORT
 
 export default function Register() {
   const navigate = useNavigate();
@@ -8,9 +9,9 @@ export default function Register() {
   const [formData, setFormData] = useState({
    username: "",
    phone_number: '',
-    email: "",
-    password: "",
-    confirmPassword: ""
+   email: "",
+   password: "",
+   confirmPassword: ""
   });
 
   const [error, setError] = useState("");
@@ -31,7 +32,6 @@ export default function Register() {
 
     try {
       setError("");
-      // Adjust endpoint as needed for your backend.
       const res = await api.signup(
        { username: formData.username, email: formData.email, password: formData.password, phone_number: formData.phone_number }, 
          "/auth/register" 
@@ -42,7 +42,6 @@ export default function Register() {
         return setError(message);
       }
 
-      // Redirect to login after successful registration
       navigate("/login");
     } catch (err) {
       console.error(err);
@@ -51,16 +50,16 @@ export default function Register() {
   };
 
   return (
-    <div style={styles.container}>
-      <h2>Register</h2>
-      <form onSubmit={handleSubmit} style={styles.form}>
+    <div className="auth-container">
+      <h2 className="title">Register</h2>
+      <form onSubmit={handleSubmit} className="form-column">
         <input
           type="text"
           name="username"
           placeholder="Full Name"
           value={formData.username}
           onChange={handleChange}
-          style={styles.input}
+          className="form-input"
           required
         />
         <input
@@ -69,10 +68,8 @@ export default function Register() {
           placeholder="Phone Number (Optional)"
           value={formData.phone_number}
           onChange={handleChange}
-          style={styles.input}
+          className="form-input"
           />
-
-
 
         <input
           type="email"
@@ -80,7 +77,7 @@ export default function Register() {
           placeholder="Email"
           value={formData.email}
           onChange={handleChange}
-          style={styles.input}
+          className="form-input"
           required
         />
 
@@ -90,7 +87,7 @@ export default function Register() {
           placeholder="Password"
           value={formData.password}
           onChange={handleChange}
-          style={styles.input}
+          className="form-input"
           required
         />
 
@@ -100,18 +97,19 @@ export default function Register() {
           placeholder="Confirm Password"
           value={formData.confirmPassword}
           onChange={handleChange}
-          style={styles.input}
+          className="form-input"
           required
         />
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
+        {error && <div className="error-msg">{error}</div>}
 
-        <button type="submit" style={styles.button}>
+        <button type="submit" className="btn btn-success">
           Register
         </button>
-        <p style={{ marginTop: "12px"}}>
+
+        <p style={{ marginTop: "20px", textAlign: "center"}}>
             Already have an account?{" "}
-            <Link to="/login" style={styles.link}>
+            <Link to="/login" className="link-text">
               Login Here
             </Link>
         </p>
@@ -119,36 +117,3 @@ export default function Register() {
     </div>
   );
 }
-
-const styles = {
-  container: {
-    maxWidth: "400px",
-    margin: "50px auto",
-    border: "1px solid #ddd",
-    padding: "20px",
-    borderRadius: "8px",
-    fontFamily: "Arial"
-  },
-  form: { display: "flex", flexDirection: "column" },
-  input: {
-    padding: "10px",
-    margin: "8px 0",
-    borderRadius: "5px",
-    border: "1px solid #ccc"
-  },
-  button: {
-    padding: "10px",
-    marginTop: "10px",
-    cursor: "pointer",
-    borderRadius: "5px",
-    border: "none",
-    background: "#4CAF50",
-    color: "#fff",
-    fontWeight: "bold"
-  },
-  link: {
-    color: "#007bff",
-    textDecoration: "none",
-    fontWeight: "bold"
-  }
-};

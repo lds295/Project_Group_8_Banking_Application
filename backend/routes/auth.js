@@ -18,24 +18,54 @@ function signToken(user) {
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   const { username, email, password, phone_number } = req.body;
+  
   if (!username || !email || !password)
     return res.status(400).json({ message: 'username, email and password are required' });
 
   try {
+    // 1. Check if user exists
     const exists = await db.query('SELECT user_id FROM users WHERE email = $1 OR username = $2 LIMIT 1', [email, username]);
     if (exists.rows.length > 0) return res.status(409).json({ message: 'User already exists' });
 
+    // 2. Create the User
     const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
-    const insert = await db.query(
+    
+    // We insert the user and get the new ID back
+    const userInsert = await db.query(
       `INSERT INTO users (username, email, password_hash, phone_number)
        VALUES ($1, $2, $3, $4)
        RETURNING user_id, username, email, phone_number, created_at`,
       [username, email, password_hash, phone_number]
     );
 
-    const user = insert.rows[0];
-    const token = signToken(user);
-    res.status(201).json({ token, user });
+    const newUser = userInsert.rows[0];
+    const newUserId = newUser.user_id;
+
+    // --- AUTOMATIC ACCOUNT CREATION START ---
+
+    // 3. Create a Checking Account (Start with $1,000)
+    // We generate a random account number using the UserID + Timestamp to keep it unique
+    const checkingNum = `CHK-${newUserId}-${Date.now()}`;
+    await db.query(
+      `INSERT INTO accounts (user_id, account_number, account_name, balance, currency)
+       VALUES ($1, $2, $3, $4, 'USD')`,
+      [newUserId, checkingNum, `${username}'s Checking`, 100000.00]
+    );
+
+    // 4. Create a Savings Account (Start with $500)
+    const savingsNum = `SAV-${newUserId}-${Date.now()}`;
+    await db.query(
+      `INSERT INTO accounts (user_id, account_number, account_name, balance, currency)
+       VALUES ($1, $2, $3, $4, 'USD')`,
+      [newUserId, savingsNum, `${username}'s Savings`, 50000.00]
+    );
+
+    // --- AUTOMATIC ACCOUNT CREATION END ---
+
+    // 5. Sign token and finish
+    const token = signToken(newUser);
+    res.status(201).json({ token, user: newUser });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Internal server error' });

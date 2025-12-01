@@ -14,6 +14,7 @@ import Home from './components/Home';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import Send_money from './components/Send_Money';
+import Transfer from './components/Transfer';
 
 
 function PrivateRoute({ user, children }) {
@@ -42,6 +43,7 @@ export default function App() {
       <nav className="navItems">
         
         <Link to="/login">Login</Link>
+        <Link to="/send_money">Send Money</Link>
         
         
       </nav>
@@ -53,6 +55,8 @@ export default function App() {
             <Route path="/" element={<Home user={user} />} />
             <Route path="/login" element={<Login onLogin={handleLogin} />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/send_money" element={<Send_money />} />
+            <Route path="/transfer" element={<Transfer />} />
             {/* Example of a protected route */}
             <Route
               path="/protected"
